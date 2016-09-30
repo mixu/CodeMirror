@@ -2205,3 +2205,63 @@ testCM("lineSeparator", function(cm) {
   eq(cm.lineCount(), 4);
 }, {value: "foo\nbar\r\nbaz\rquux",
     lineSeparator: "\n"});
+
+function fillTillWraps(cm, c) {
+  var val = "", lineHeight = cm.doc.height
+  do {
+    val += c
+    cm.setValue(val)
+  } while (cm.doc.height == lineHeight)
+  eq(cm.doc.height, lineHeight * 2)
+  return val.length
+}
+
+function assertMonotoneCursorMovement(cm, len) {
+  var prevCoords, coords
+  for(var i = 0; i < len; ++i) {
+    eq(cm.doc.getCursor().ch, i)
+    coords = cm.cursorCoords()
+    eq(coords.left, coords.right)
+    if (prevCoords) {
+      if (i != len - 1) {
+        eq(coords.left > prevCoords.left, true)
+        eq(coords.top, prevCoords.top)
+      } else {
+        eq(coords.left < prevCoords.left, true)
+        eq(coords.top > prevCoords.top, true)
+      }
+    }
+    prevCoords = coords
+    CodeMirror.commands.goCharRight(cm)
+  }
+}
+
+testCM("monotoneCursor", function(cm) {
+  var len = fillTillWraps(cm, "a")
+  assertMonotoneCursorMovement(cm, len)
+  cm.setValue("")
+  len = fillTillWraps(cm, "雪")
+  assertMonotoneCursorMovement(cm, len)
+}, {lineWrapping: true})
+
+testCM("bidiCursor", function(cm) {
+  var len = cm.getValue().length
+  var prevCoords, coords
+  for(var i = 0; i < len; ++i) {
+    cm.doc.setCursor(0, i)
+    eq(cm.doc.getCursor().ch, i)
+    coords = cm.cursorCoords()
+    eq(coords.left, coords.right)
+    cm.doc.setSelection(Pos(0, 0), Pos(0, i))
+    if (prevCoords) {
+      // FIXME: 35 and 36 are probably wrong, at least dubious
+      // 33 is after ١, 35 is after ٢, 36 is before ٣
+      if (i != 33 && i != 35 && i != 36) {
+        eq(coords.left > prevCoords.left, true)
+      } else {
+        eq(coords.left < prevCoords.left, true)
+      }
+    }
+    prevCoords = coords
+  }
+}, {value: "In Arabic numerals, »1 2 3« is »١ ٢ ٣«."})
