@@ -1,9 +1,11 @@
 import { getLine } from "./utils_line"
 
 // A Pos instance represents a position within the text.
-export function Pos (line, ch) {
-  if (!(this instanceof Pos)) return new Pos(line, ch)
-  this.line = line; this.ch = ch
+export function Pos(line, ch, sticky = "auto") {
+  if (!(this instanceof Pos)) return new Pos(line, ch, sticky)
+  this.line = line
+  this.ch = ch
+  this.sticky = sticky
 }
 
 // Compare two positions, return 0 if they are the same, a negative

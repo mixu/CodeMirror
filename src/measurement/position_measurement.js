@@ -357,7 +357,7 @@ export function cursorCoords(cm, pos, context, lineObj, preparedMeasure, varHeig
     return get(ch, right)
   }
   let order = getOrder(lineObj), ch = pos.ch
-  if (!order) return get(ch)
+  if (!order) return get(pos.sticky == "before" ? ch - 1 : ch, pos.sticky == "before")
   let partPos = getBidiPartAt(order, ch)
   let val = getBidi(ch, partPos)
   if (bidiOther != null) val.other = getBidi(ch, bidiOther)
@@ -381,8 +381,8 @@ export function estimateCoords(cm, pos) {
 // the right of the character position, for example). When outside
 // is true, that means the coordinates lie outside the line's
 // vertical range.
-function PosWithInfo(line, ch, outside, xRel) {
-  let pos = Pos(line, ch)
+function PosWithInfo(line, ch, sticky, outside, xRel) {
+  let pos = Pos(line, ch, sticky)
   pos.xRel = xRel
   if (outside) pos.outside = true
   return pos
@@ -393,10 +393,10 @@ function PosWithInfo(line, ch, outside, xRel) {
 export function coordsChar(cm, x, y) {
   let doc = cm.doc
   y += cm.display.viewOffset
-  if (y < 0) return PosWithInfo(doc.first, 0, true, -1)
+  if (y < 0) return PosWithInfo(doc.first, 0, "auto", true, -1)
   let lineN = lineAtHeight(doc, y), last = doc.first + doc.size - 1
   if (lineN > last)
-    return PosWithInfo(doc.first + doc.size - 1, getLine(doc, last).text.length, true, 1)
+    return PosWithInfo(doc.first + doc.size - 1, getLine(doc, last).text.length, "auto", true, 1)
   if (x < 0) x = 0
 
   let lineObj = getLine(doc, lineN)
@@ -431,18 +431,20 @@ function coordsCharInner(cm, lineObj, lineNo, x, y) {
 
   if (x < 0) x = 0
   if (x > cm.display.wrapper.clientWidth) x = cm.display.wrapper.clientWidth
-  if (x > toX) return PosWithInfo(lineNo, to, toOutside, 1)
+  if (x > toX) return PosWithInfo(lineNo, to, "auto", toOutside, 1)
   // Do a binary search between these bounds.
   for (;;) {
     if (bidi ? to == from || to == moveVisually(lineObj, from, 1) : to - from <= 1) {
       let ch = x < fromX || x - fromX <= toX - x ? from : to
       let outside = ch == from ? fromOutside : toOutside
       let xDiff = x - (ch == from ? fromX : toX)
+      let sticky = "auto"
       if (toX > cm.display.wrapper.clientWidth) {
         ++ch
+        sticky = "before"
       }
       while (isExtendingChar(lineObj.text.charAt(ch))) ++ch
-      let pos = PosWithInfo(lineNo, ch, outside, xDiff < -1 ? -1 : xDiff > 1 ? 1 : 0)
+      let pos = PosWithInfo(lineNo, ch, sticky, outside, xDiff < -1 ? -1 : xDiff > 1 ? 1 : 0)
       return pos
     }
     let step = Math.ceil(dist / 2), middle = from
