@@ -1149,7 +1149,7 @@ testCM("moveVstuck", function(cm) {
   }
   cm.setCursor(Pos(0, val.length - 1));
   cm.moveV(-1, "line");
-  eqPos(cm.getCursor(), Pos(0, 26));
+  eqPos(cm.getCursor(), Pos(0, 27));
 }, {lineWrapping: true}, ie_lt8 || opera_lt10);
 
 testCM("collapseOnMove", function(cm) {

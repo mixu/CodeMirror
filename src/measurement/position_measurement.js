@@ -429,6 +429,8 @@ function coordsCharInner(cm, lineObj, lineNo, x, y) {
   let from = lineLeft(lineObj), to = lineRight(lineObj)
   let fromX = getX(from), fromOutside = wrongLine, toX = getX(to), toOutside = wrongLine
 
+  if (x < 0) x = 0
+  if (x > cm.display.wrapper.clientWidth) x = cm.display.wrapper.clientWidth
   if (x > toX) return PosWithInfo(lineNo, to, toOutside, 1)
   // Do a binary search between these bounds.
   for (;;) {
@@ -436,30 +438,21 @@ function coordsCharInner(cm, lineObj, lineNo, x, y) {
       let ch = x < fromX || x - fromX <= toX - x ? from : to
       let outside = ch == from ? fromOutside : toOutside
       let xDiff = x - (ch == from ? fromX : toX)
-      // This is a kludge to handle the case where the coordinates
-      // are after a line-wrapped line. We should replace it with a
-      // more general handling of cursor positions around line
-      // breaks. (Issue #4078)
-      if (toOutside && !bidi && !/\s/.test(lineObj.text.charAt(ch)) && xDiff > 0 &&
-          ch < lineObj.text.length && preparedMeasure.view.measure.heights.length > 1) {
-        let charSize = measureCharPrepared(cm, preparedMeasure, ch, "right")
-        if (innerOff <= charSize.bottom && innerOff >= charSize.top && Math.abs(x - charSize.right) < xDiff) {
-          outside = false
-          ch++
-          xDiff = x - charSize.right
-        }
+      if (toX > cm.display.wrapper.clientWidth) {
+        ++ch
       }
       while (isExtendingChar(lineObj.text.charAt(ch))) ++ch
       let pos = PosWithInfo(lineNo, ch, outside, xDiff < -1 ? -1 : xDiff > 1 ? 1 : 0)
       return pos
     }
-    let step = Math.ceil(dist / 2), middle = from + step
+    let step = Math.ceil(dist / 2), middle = from
     if (bidi) {
-      middle = from
       for (let i = 0; i < step; ++i) middle = moveVisually(lineObj, middle, 1)
+    } else {
+      middle += step
     }
     let middleX = getX(middle)
-    if (middleX > x) {to = middle; toX = middleX; if (toOutside = wrongLine) toX += 1000; dist = step}
+    if (middleX > x) {to = middle; toX = middleX; toOutside = wrongLine; dist = step}
     else {from = middle; fromX = middleX; fromOutside = wrongLine; dist -= step}
   }
 }
