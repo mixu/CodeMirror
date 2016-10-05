@@ -2218,21 +2218,44 @@ function fillTillWraps(cm, c) {
 
 function assertMonotoneCursorMovement(cm, len) {
   var prevCoords, coords
-  for(var i = 0; i < len; ++i) {
-    eq(cm.doc.getCursor().ch, i)
+  ++len // There's an additional cursor position at the line wrap
+  var i
+  for(i = 0; i < len; ++i) {
+    var cursor = cm.doc.getCursor();
+    eq(cursor.ch, i > len - 2 ? i - 1 : i)
+    eq(cursor.sticky, i >= len - 2 ? (i == len - 2 ? "before" : "after") : "auto")
     coords = cm.cursorCoords()
     eq(coords.left, coords.right)
     if (prevCoords) {
       if (i != len - 1) {
-        eq(coords.left > prevCoords.left, true)
-        eq(coords.top, prevCoords.top)
+        is(coords.left > prevCoords.left)
+        eq(coords.top, prevCoords.top, "same height as previous position")
       } else {
-        eq(coords.left < prevCoords.left, true)
-        eq(coords.top > prevCoords.top, true)
+        is(coords.left < prevCoords.left)
+        is(coords.top > prevCoords.top, "line wrap")
       }
     }
     prevCoords = coords
     CodeMirror.commands.goCharRight(cm)
+  }
+  prevCoords = null
+  for(; i >= 0; --i) {
+    var cursor = cm.doc.getCursor();
+    eq(cursor.ch, i > len - 2 ? i - 1 : i)
+    eq(cursor.sticky, i >= len - 2 ? (i == len - 2 ? "before" : "auto") : "auto")
+    coords = cm.cursorCoords()
+    eq(coords.left, coords.right)
+    if (prevCoords) {
+      if (i != len - 2) {
+        is(coords.left < prevCoords.left)
+        eq(coords.top, prevCoords.top, "same height as previous position")
+      } else {
+        is(coords.left > prevCoords.left)
+        is(coords.top < prevCoords.top, "line wrap")
+      }
+    }
+    prevCoords = coords
+    CodeMirror.commands.goCharLeft(cm)
   }
 }
 
@@ -2257,9 +2280,9 @@ testCM("bidiCursor", function(cm) {
       // FIXME: 35 and 36 are probably wrong, at least dubious
       // 33 is after ١, 35 is after ٢, 36 is before ٣
       if (i != 33 && i != 35 && i != 36) {
-        eq(coords.left > prevCoords.left, true)
+        is(coords.left > prevCoords.left)
       } else {
-        eq(coords.left < prevCoords.left, true)
+        is(coords.left < prevCoords.left)
       }
     }
     prevCoords = coords

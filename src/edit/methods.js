@@ -501,8 +501,9 @@ export default function(CodeMirror) {
 // position. The resulting position will have a hitSide=true
 // property if it reached the end of the document.
 function findPosH(doc, pos, dir, unit, visually) {
-  let line = pos.line, ch = pos.ch, origDir = dir
+  let line = pos.line, ch = pos.ch, origDir = dir, sticky = "auto"
   let lineObj = getLine(doc, line)
+  let preparedMeasure = null //prepareMeasureForLine(cm, lineObj)
   function findNextLine() {
     let l = line + dir
     if (l < doc.first || l >= doc.first + doc.size) return false
@@ -510,13 +511,27 @@ function findPosH(doc, pos, dir, unit, visually) {
     return lineObj = getLine(doc, l)
   }
   function moveOnce(boundToLine) {
+    let oldTop = cursorCoords(doc.cm, pos, "line", lineObj, preparedMeasure).top
     let next = (visually ? moveVisually : moveLogically)(lineObj, ch, dir, true)
     if (next == null) {
       if (!boundToLine && findNextLine()) {
         if (visually) ch = (dir < 0 ? lineRight : lineLeft)(lineObj)
         else ch = dir < 0 ? lineObj.text.length : 0
       } else return false
-    } else ch = next
+    } else {
+      if (cursorCoords(doc.cm, Pos(line, next), "line", lineObj, preparedMeasure).top != oldTop) {
+        if ((pos.sticky == "before") && (dir == 1)) {
+          sticky = "after"
+        } else if (dir == -1) {
+          sticky = "before"
+        } else {
+          sticky = "before"
+          ch = next
+        }
+      } else {
+        ch = next
+      }
+    }
     return true
   }
 
@@ -544,7 +559,7 @@ function findPosH(doc, pos, dir, unit, visually) {
       if (dir > 0 && !moveOnce(!first)) break
     }
   }
-  let result = skipAtomic(doc, Pos(line, ch), pos, origDir, true)
+  let result = skipAtomic(doc, Pos(line, ch, sticky), pos, origDir, true)
   if (!cmp(pos, result)) result.hitSide = true
   return result
 }
