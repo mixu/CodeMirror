@@ -2265,3 +2265,41 @@ testCM("bidiCursor", function(cm) {
     prevCoords = coords
   }
 }, {value: "In Arabic numerals, »1 2 3« is »١ ٢ ٣«."})
+
+testCM("positions", function(cm) {
+  var firstLineTop = cm.cursorCoords(Pos(0, 0)).top;
+  var w = 1;
+  cm.setSize(w);
+  while (cm.charCoords(Pos(0, 2)).top != firstLineTop) {
+    cm.setSize(++w);
+  }
+  var secondLineTop = cm.charCoords(Pos(0, 3)).top;
+  is(secondLineTop > firstLineTop);
+  var lastLeft = -1, targetTop = firstLineTop;
+
+  function checkCursorCoords(pos) {
+    var coords = cm.cursorCoords(pos);
+    is(coords.left > lastLeft);
+    eq(coords.top, targetTop);
+  }
+
+  // Check cursor and char coords for all positions with all stickinesses
+  for (var i = 0; i < 6; ++i) {
+    var pos1 = new Pos(0, i, "before");
+    checkCursorCoords(pos1);
+    if (i == 3) { // End of the line
+      lastLeft = -1
+      targetTop = secondLineTop
+    }
+    var pos2 = new Pos(0, i);
+    checkCursorCoords(pos2);
+
+    var coords1 = cm.charCoords(pos1), coords2 = cm.charCoords(pos2);
+    eq(coords1.left, coords2.left);
+    eq(coords1.top, coords2.top);
+    is(coords1.left > lastLeft);
+    eq(coords1.top, targetTop);
+
+    lastLeft = coords1.left;
+  }
+}, {value: "12345", lineWrapping: true})
