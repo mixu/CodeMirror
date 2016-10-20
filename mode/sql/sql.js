@@ -1,14 +1,7 @@
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
-(function(mod) {
-  if (typeof exports == "object" && typeof module == "object") // CommonJS
-    mod(require("../../lib/codemirror"));
-  else if (typeof define == "function" && define.amd) // AMD
-    define(["../../lib/codemirror"], mod);
-  else // Plain browser env
-    mod(CodeMirror);
-})(function(CodeMirror) {
+export default function(CodeMirror) {
 "use strict";
 
 CodeMirror.defineMode("sql", function(config, parserConfig) {
@@ -379,9 +372,19 @@ CodeMirror.defineMode("sql", function(config, parserConfig) {
     builtin: set("blob datetime first key __key__ string integer double boolean null"),
     operatorChars: /^[*+\-%<>!=]/
   });
+  // Presto mode for SQL
+  CodeMirror.defineMIME('text/x-prestodb', {
+    name: 'sql',
+    keywords: set('abs accessible acos action add after algorithm all alter analyze and approx_distinct approx_percentile arbitrary array_agg array_distinct array_intersect array_join array_max array_min array_position array_remove array_sort array_union as asc asensitive asin at atan authors auto_increment autocommit avg avg avg_row_length bar before begin between binary binlog bit_count bitwise_and bitwise_not bitwise_or bitwise_xor bool_and bool_or both btree by cache call cardinality cascade cascaded case case cast catalog_name cbrt ceil ceiling chain change changed char2hexint character check checkpoint checksum checksum chr class_origin client_statistics close coalesce coalesce code collate collation collations color column columns comment commit committed completion concat concurrent condition connection consistent constraint contains contains continue contributors convert corr cos cosh cosine_similarity count count count_if covar_pop covar_samp create cross cume_dist current current_date current_date current_time current_time current_timestamp current_timestamp current_timezone current_user cursor data database databases date_add date_diff date_format date_parse date_trunc day day_hour day_microsecond day_minute day_of_month day_of_week day_of_year day_second deallocate dec decimal declare default degrees delay_key_write delayed delete delimiter dense_rank des_key_file desc describe deterministic dev_pop dev_samp deviance diagnostics directory disable discard distinct distinctrow div do dow doy drop dual dumpfile e each element_at else elseif enable enclosed end ends engine engines enum errors escape escaped even event events every every execute exists exit explain expr extended extract fast fetch field fields first first_value flatten floor flush for force foreign format_datetime found_rows from from_base from_base64 from_base64url from_hex from_iso8601_date from_iso8601_timestamp from_unixtime from_utf8 full fulltext function general geometric_mean get global grant grants greatest group group_concat handler hash having help high_priority histogram hosts hour hour_microsecond hour_minute hour_second if if ignore ignore_server_ids import in index index index_statistics infile infinity inner innodb inout insensitive insert insert_method install interval interval into invoker is is_finite is_infinite is_nan isolation iterate join json_array_contains json_array_get json_array_length json_extract json_extract_scalar json_format json_parse json_size key keys kill lag language last last_value lead leading least leave left length level like limit limit linear lines list ln load local localtime localtime localtimestamp localtimestamp lock log log10 log2 logs loop low_priority lower lpad ltrim map map_agg map_concat map_keys map_union map_values master master_heartbeat_period master_ssl_verify_server_cert masters match max max max_by max_rows maxvalue md5 message_text middleint migrate min min min_by min_rows minute minute_microsecond minute_second mod mod mode modifies modify month multimap_agg mutex mysql_errno nan natural next no no_write_to_binlog normalize not now nth_value ntile numeric_histogram offline offset on one online open optimize option optionally or order out outer outfile pack_keys parse_datetime parser partition partitions password percent_rank phase pi plugin plugins position pow power prepare preserve prev primary privileges procedure processlist profile profiles purge quarter query quick radians rand random range rank read read_write reads real rebuild recover references regexp regexp_extract regexp_extract_all regexp_like regexp_replace regexp_split regr_intercept regr_slope relaylog release remove rename render reorganize repair repeat repeatable replace replace require resignal restrict resume return returns reverse revoke rgb right rlike rollback rollup round row row_format row_number rpad rtree rtrim savepoint schedule schema schema_name schemas second second_microsecond security select sensitive separator sequence serializable server session set sha1 sha256 sha512 share show sign signal sin slave slice slow smallint snapshot soname spatial specific split split_part sql sql_big_result sql_buffer_result sql_cache sql_calc_found_rows sql_no_cache sql_small_result sqlexception sqlstate sqlwarning sqrt ssl start starting starts status std stddev stddev stddev_pop stddev_pop stddev_samp stddev_samp storage straight_join strpos subclass_origin substr substring sum sum suspend table table_name table_statistics tables tablespace tan tanh temporary terminated then timezone_hour timezone_minute to to_base to_base64 to_base64url to_char to_date to_hex to_iso8601 to_timestamp to_unixtime to_utf8 trailing transaction trigger triggers trim truncate truncate uncommitted undo uninstall union unique unlock update upgrade upper url_decode url_encode url_extract url_extract_host url_extract_parameter url_extract_path url_extract_port url_extract_protocol url_extract_query usage use use_frm user user_resources user_statistics using utc_date utc_time utc_timestamp value values var_pop var_samp variables variance varying view views warnings week week_of_year when where while width_bucket with work write xa xor year year_month year_of_week yow zerofill zip'),
+    builtin: set('bigint bit blob bool boolean char date datetime decimal double float float4 float8 int int1 int2 int3 int4 int8 integer long longblob longtext medium mediumblob mediumint mediumtext numeric precision signed text time timestamp tinyblob tinyint tinytext unsigned varbinary varchar varcharacter year'),
+    atoms: set('false true null unknown'),
+    operatorChars: /^[*+\-%<>!=&|^]/,
+    dateSQL: set('date time timestamp'),
+    support: set('binaryNumber charsetCast decimallessFloat doubleQuote hexNumber nCharCast ODBCdotTable zerolessFloat'),
+  });
 }());
 
-});
+}
 
 /*
   How Properties of Mime Types are used by SQL Mode

@@ -67,3 +67,14 @@ import { addLegacyProps } from "./legacy"
 addLegacyProps(CodeMirror)
 
 CodeMirror.version = "5.19.1"
+
+// load all addons and modes we will want
+import sqlMode from '../../mode/sql/sql';
+import showHint from '../../addon/hint/show-hint';
+import sqlHint from '../../addon/hint/sql-hint';
+import runmode from '../../addon/runmode/runmode';
+
+sqlMode(CodeMirror);
+showHint(CodeMirror);
+sqlHint(CodeMirror);
+runmode(CodeMirror);
